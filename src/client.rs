@@ -79,15 +79,16 @@ impl RpcClient {
     }
 
     /// Call an `method` rpc with given `args` list
-    async fn call<T: for<'a> serde::de::Deserialize<'a>>(
+    async fn call<T: for<'a> serde::de::Deserialize<'a> + std::fmt::Debug>(
         &mut self,
         method: &str,
         args: &[Value],
     ) -> anyhow::Result<T> {
         // Prepare RPC request data
+        println!("method: {:#?}, args: {:#?}", method, args);
         let params = args;
         let request_data = json!({
-            "jsonrpc": "2.0",
+            "jsonrpc": "1.0",
             "id": "rusttest",
             "method": method,
             "params": params,
@@ -98,10 +99,13 @@ impl RpcClient {
         if let Some(user) = &self.user {
             req_builder = req_builder.basic_auth(user, self.pass.clone());
         }
+        println!("req_builder: {:#?}", req_builder);
         // Make the HTTP POST request
         let response = req_builder.json(&request_data).send().await?;
+        println!("response: {:#?}", response);
         // Parse the JSON response
         let json_response: T = response.json().await?;
+        println!("json_response: {:#?}", json_response);
 
         Ok(json_response)
     }
