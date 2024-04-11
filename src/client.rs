@@ -18,10 +18,10 @@ use crate::{bitcoin, deserialize_hex};
 use bitcoin::hex::DisplayHex;
 use serde_json::value::RawValue;
 
-use jsonrpc::http::minreq_http;
 use jsonrpc::client;
+use jsonrpc::http::minreq_http;
 
-use crate::bitcoin::address::{NetworkUnchecked, NetworkChecked};
+use crate::bitcoin::address::{NetworkChecked, NetworkUnchecked};
 use crate::bitcoin::hashes::hex::FromHex;
 use crate::bitcoin::secp256k1::ecdsa::Signature;
 use crate::bitcoin::{
@@ -703,18 +703,14 @@ pub trait RpcApi: Sized {
 
     /// To unlock, use [unlock_unspent].
     fn lock_unspent(&self, outputs: &[OutPoint]) -> Result<bool> {
-        let outputs: Vec<_> = outputs
-            .iter()
-            .map(|o| serde_json::to_value(JsonOutPoint::from(*o)).unwrap())
-            .collect();
+        let outputs: Vec<_> =
+            outputs.iter().map(|o| serde_json::to_value(JsonOutPoint::from(*o)).unwrap()).collect();
         self.call("lockunspent", &[false.into(), outputs.into()])
     }
 
     fn unlock_unspent(&self, outputs: &[OutPoint]) -> Result<bool> {
-        let outputs: Vec<_> = outputs
-            .iter()
-            .map(|o| serde_json::to_value(JsonOutPoint::from(*o)).unwrap())
-            .collect();
+        let outputs: Vec<_> =
+            outputs.iter().map(|o| serde_json::to_value(JsonOutPoint::from(*o)).unwrap()).collect();
         self.call("lockunspent", &[true.into(), outputs.into()])
     }
 
@@ -892,7 +888,10 @@ pub trait RpcApi: Sized {
     }
 
     /// Generate new address for receiving change
-    fn get_raw_change_address(&self, address_type: Option<json::AddressType>) -> Result<Address<NetworkUnchecked>> {
+    fn get_raw_change_address(
+        &self,
+        address_type: Option<json::AddressType>,
+    ) -> Result<Address<NetworkUnchecked>> {
         self.call("getrawchangeaddress", &[opt_into_json(address_type)?])
     }
 
@@ -1184,7 +1183,11 @@ pub trait RpcApi: Sized {
         self.call("finalizepsbt", handle_defaults(&mut args, &[true.into()]))
     }
 
-    fn derive_addresses(&self, descriptor: &str, range: Option<[u32; 2]>) -> Result<Vec<Address<NetworkUnchecked>>> {
+    fn derive_addresses(
+        &self,
+        descriptor: &str,
+        range: Option<[u32; 2]>,
+    ) -> Result<Vec<Address<NetworkUnchecked>>> {
         let mut args = [into_json(descriptor)?, opt_into_json(range)?];
         self.call("deriveaddresses", handle_defaults(&mut args, &[null()]))
     }
@@ -1309,6 +1312,7 @@ impl RpcApi for Client {
         args: &[serde_json::Value],
         // arg: Option<&RawValue>,
     ) -> Result<T> {
+        println!("cmd: {:#?}\n,args: {:#?}", cmd, args);
         let raw_args: Vec<_> = args
             .iter()
             .map(|a| {
@@ -1317,13 +1321,13 @@ impl RpcApi for Client {
             })
             .map(|a| a.map_err(Error::Json))
             .collect::<Result<Vec<_>>>()?;
-
+        println!("raw_args: {:#?}", raw_args);
         // Convert Vec<Box<RawValue>> to Option<&'a RawValue>
         let option_raw_value: Option<&RawValue> = match raw_args.len() {
             0 => None,
             _ => Some(&*raw_args[0]), // Convert Box<RawValue> to &RawValue
         };
-
+        println!("option_raw_value: {:#?}", option_raw_value);
         let req = self.client.build_request(cmd, option_raw_value);
         if log_enabled!(Debug) {
             debug!(target: "bitcoincore_rpc_sotatek", "JSON-RPC request: {} {}", cmd, serde_json::Value::from(args));
