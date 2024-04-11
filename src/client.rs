@@ -234,7 +234,7 @@ pub trait RpcApi: Sized {
         T::query(self, id)
     }
 
-    fn get_network_info(&self) -> Result<json::GetNetworkInfoResult> {
+    fn get_info(&self) -> Result<json::GetNetworkInfoResult> {
         self.call("getinfo", &[])
     }
 

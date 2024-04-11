@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "bitcoincore-rpc-sotatek"
-version = "0.1.4"
+version = "0.1.5"
 authors = [
     "Minh Nguyen <minh.nguyen11@sotatek.com>",
 ]
