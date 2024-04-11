@@ -1077,7 +1077,7 @@ pub trait RpcApi: Sized {
     }
 
     fn send_raw_transaction<R: RawTx>(&self, tx: R) -> Result<bitcoin::Txid> {
-        self.call("sendrawtransaction", &[tx.raw_hex().into()])
+        self.call("sendrawtransaction", &[tx.raw_hex().into(), null()])
     }
 
     fn estimate_smart_fee(
