@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "bitcoincore-rpc-sotatek"
-version = "0.1.7"
+version = "0.1.8"
 authors = [
     "Minh Nguyen <minh.nguyen11@sotatek.com>",
 ]
@@ -36,6 +36,8 @@ version = "1"
 version = "3.3.0"
 
 [dependencies]
+anyhow = "1.0.71"
 serde_json = { version = "1.0", features = ["raw_value"] }
+reqwest = { version = "0.12.3", features = ["json"] }
 jsonrpc = { version = "0.17.0", features = ["minreq_http"] }
 minreq = { version = "2.4.2", features = ["https-rustls-probe"] }
