@@ -13,12 +13,12 @@
 //! This is a client library for the Bitcoin Core JSON-RPC API.
 //!
 
-#![crate_name = "bitcoincore_rpc"]
+#![crate_name = "bitcoincore_rpc_sotatek"]
 #![crate_type = "rlib"]
 
 #[macro_use]
 extern crate log;
-#[allow(unused)]
+// #[allow(unused)]
 #[macro_use] // `macro_use` is needed for v1.24.0 compilation.
 extern crate serde;
 
@@ -39,7 +39,7 @@ pub use crate::error::Error;
 pub use crate::queryable::*;
 
 fn deserialize_hex<T: Decodable>(hex: &str) -> Result<T> {
-    let mut reader = HexToBytesIter::new(&hex)?;
+    let mut reader = HexToBytesIter::new(hex)?;
     let object = Decodable::consensus_decode(&mut reader)?;
     if reader.read_u8().is_ok() {
         Err(Error::BitcoinSerialization(bitcoin::consensus::encode::Error::ParseFailed(
