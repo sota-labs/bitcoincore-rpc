@@ -1312,7 +1312,6 @@ impl RpcApi for Client {
         args: &[serde_json::Value],
         // arg: Option<&RawValue>,
     ) -> Result<T> {
-        println!("cmd: {:#?}\n,args: {:#?}", cmd, args);
         let raw_args: Vec<_> = args
             .iter()
             .map(|a| {
@@ -1321,19 +1320,19 @@ impl RpcApi for Client {
             })
             .map(|a| a.map_err(Error::Json))
             .collect::<Result<Vec<_>>>()?;
-        println!("raw_args: {:#?}", raw_args);
         // Convert Vec<Box<RawValue>> to Option<&'a RawValue>
         let option_raw_value: Option<&RawValue> = match raw_args.len() {
             0 => None,
             _ => Some(&*raw_args[0]), // Convert Box<RawValue> to &RawValue
         };
-        println!("option_raw_value: {:#?}", option_raw_value);
         let req = self.client.build_request(cmd, option_raw_value);
+        println!("req: {:#?}", req);
         if log_enabled!(Debug) {
             debug!(target: "bitcoincore_rpc_sotatek", "JSON-RPC request: {} {}", cmd, serde_json::Value::from(args));
         }
 
         let resp = self.client.send_request(req).map_err(Error::from);
+        println!("resp: {:#?}", resp);
         log_response(cmd, &resp);
         Ok(resp?.result()?)
     }
