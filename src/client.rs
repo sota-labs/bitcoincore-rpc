@@ -1,11 +1,47 @@
+use bitcoincore_rpc_json::bitcoin::{self, hex::DisplayHex, Transaction};
 use reqwest::Client;
-use serde_json::json;
+use serde_json::{json, Value};
 
 /// The different authentication methods for the client.
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Auth {
     None,
     UserPass(String, String),
+}
+
+/// Used to pass raw txs into the API.
+pub trait RawTx: Sized + Clone {
+    fn raw_hex(self) -> String;
+}
+
+impl<'a> RawTx for &'a Transaction {
+    fn raw_hex(self) -> String {
+        bitcoin::consensus::encode::serialize_hex(self)
+    }
+}
+
+impl<'a> RawTx for &'a [u8] {
+    fn raw_hex(self) -> String {
+        self.to_lower_hex_string()
+    }
+}
+
+impl<'a> RawTx for &'a Vec<u8> {
+    fn raw_hex(self) -> String {
+        self.to_lower_hex_string()
+    }
+}
+
+impl<'a> RawTx for &'a str {
+    fn raw_hex(self) -> String {
+        self.to_owned()
+    }
+}
+
+impl RawTx for String {
+    fn raw_hex(self) -> String {
+        self
+    }
 }
 
 impl Auth {
@@ -46,7 +82,7 @@ impl RpcClient {
     async fn call<T: for<'a> serde::de::Deserialize<'a>>(
         &mut self,
         method: &str,
-        args: &[serde_json::Value],
+        args: &[Value],
     ) -> anyhow::Result<T> {
         // Prepare RPC request data
         let params = args;
@@ -71,15 +107,20 @@ impl RpcClient {
     }
 
     // RpcApi
-    /// Returns the numbers of block in the longest chain.
-    // fn get_block_count(&self) -> Option<u64> {
-    //     self.call("getblockcount", &[])
-    // }
-
-    async fn get_block_count(&mut self) -> Option<u64> {
+    pub async fn get_block_count(&mut self) -> Option<u64> {
         match self.call::<u64>("getblockcount", &[]).await {
             Ok(result) => Some(result),
-            Err(_) => None, // You can handle the error case as needed
+            Err(_) => None,
+        }
+    }
+
+    pub async fn send_raw_transaction<R: RawTx>(&mut self, tx: R) -> Option<bitcoin::Txid> {
+        match self
+            .call::<bitcoin::Txid>("sendrawtransaction", &[tx.raw_hex().into(), Value::Null])
+            .await
+        {
+            Ok(result) => Some(result),
+            Err(_) => None,
         }
     }
 }
